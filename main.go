@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
-	"course-registration-sysyem/course-service/services"
+	"course-registration-system/course-service/controllers"
+	"course-registration-system/course-service/models"
+	"course-registration-system/course-service/services"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -37,29 +39,54 @@ func (config *Config) LoadConfig(file_name string) {
 	}
 }
 
+func ConnectToDB(config Config) (services.MongoDatabase, services.MySqlDatabase) {
+	sql_database := new(services.MySqlDatabase)
+	mongo_database := new(services.MongoDatabase)
+
+	for _, database := range config.DB {
+		if database.DB_TYPE == "MONGO" {
+			mongo_database.Connect(context.Background(), database.DB_CONNECTION_STRING)
+			defer mongo_database.Disconnect(context.Background())
+			mongo_database.Ping(context.Background())
+			mongo_database.SetDatabase(database.DB_NAME)
+			fmt.Println("Connected to Mongo DB")
+		} else if database.DB_TYPE == "MYSQL" {
+			sql_database.Connect(database.DB_CONNECTION_STRING)
+			fmt.Println("Connected to MySQL DB")
+		}
+	}
+
+	return *mongo_database, *sql_database
+}
+
+func InitializeCourseCrud(mongo_db services.MongoDatabase, mysql_db services.MySqlDatabase) *controllers.CourseCrudController {
+	course_service := new(services.CourseCrudService)
+	course_service.Init(mysql_db)
+
+	course_controller := new(controllers.CourseCrudController)
+	course_controller.Init(*course_service)
+
+	return course_controller
+}
+
 func main() {
 
 	//Load config
 	config := new(Config)
 	config.LoadConfig("config.json")
 
-	sqlDatabase := new(services.MySqlDatabase)
-	mongoDatabse := new(services.MongoDatabase)
+	mongo_database, sql_database := ConnectToDB(*config)
 
-	for _, database := range config.DB {
-		if database.DB_TYPE == "MONGO" {
-			mongoDatabse.Connect(context.Background(), database.DB_CONNECTION_STRING)
-			defer mongoDatabse.Disconnect(context.Background())
-			mongoDatabse.Ping(context.Background())
-			mongoDatabse.SetDatabase(database.DB_NAME)
-			fmt.Println("Connected to Mongo DB")
-		} else if database.DB_TYPE == "MYSQL" {
-			sqlDatabase.Connect(database.DB_CONNECTION_STRING)
-			fmt.Println("Connected to MySQL DB")
-		}
-	}
+	course_crud_controller := InitializeCourseCrud(mongo_database, sql_database)
 
 	server := gin.Default()
+
+	base_path := server.Group("")
+	course_crud_controller.RegisterRoutes(base_path)
+
+	course := new(models.Course)
+	course.CreateCourse(101, "Pqr", 4, "intro to pqr", "CS")
+	// fmt.Println(course)
 
 	server.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{

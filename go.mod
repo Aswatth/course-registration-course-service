@@ -1,4 +1,4 @@
-module course-registration-sysyem/course-service
+module course-registration-system/course-service
 
 go 1.21.5
 
