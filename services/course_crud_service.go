@@ -26,3 +26,11 @@ func (obj *CourseCrudService) CreateCourse(course models.Course) {
 		fmt.Println("New course created successfully")
 	}
 }
+
+func (obj *CourseCrudService) FetchCourse(course_id int) models.Course {
+	var course models.Course
+
+	obj.sqlDatabase.db.First(&course, course_id)
+
+	return course
+}

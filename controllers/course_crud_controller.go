@@ -3,8 +3,10 @@ package controllers
 import (
 	"course-registration-system/course-service/models"
 	"course-registration-system/course-service/services"
-	"fmt"
+
+	// "fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,8 +27,8 @@ func (obj *CourseCrudController) CreateCourse(context *gin.Context) {
 		context.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 	}
 
-	fmt.Print("[OUTPUT]:\t")
-	fmt.Println(course)
+	// fmt.Print("[OUTPUT]:\t")
+	// fmt.Println(course)
 
 	//Store to DB
 	obj.course_crud_service.CreateCourse(course)
@@ -34,7 +36,17 @@ func (obj *CourseCrudController) CreateCourse(context *gin.Context) {
 	context.JSON(http.StatusOK, gin.H{"message": "Successfully created a course"})
 }
 
+func (obj *CourseCrudController) FetchCourse(context *gin.Context) {
+	course_id, _ := strconv.ParseInt(context.Query("course_id"), 0, 0)
+
+	//Fetch from DB
+	fetched_course := obj.course_crud_service.FetchCourse(int(course_id))
+
+	context.JSON(http.StatusOK, fetched_course)
+}
+
 func (obj *CourseCrudController) RegisterRoutes(rg *gin.RouterGroup) {
 	course_routes := rg.Group("/courses")
 	course_routes.POST("/create", obj.CreateCourse)
+	course_routes.GET("/fetch", obj.FetchCourse)
 }
