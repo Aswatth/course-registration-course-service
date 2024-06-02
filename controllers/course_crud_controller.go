@@ -45,8 +45,18 @@ func (obj *CourseCrudController) FetchCourse(context *gin.Context) {
 	context.JSON(http.StatusOK, fetched_course)
 }
 
+func (obj *CourseCrudController) DeleteCourse(context *gin.Context) {
+	course_id, _ := strconv.ParseInt(context.Query("course_id"), 0, 0)
+
+	//Fetch from DB
+	obj.course_crud_service.DeleteCourse(int(course_id))
+
+	context.JSON(http.StatusOK, gin.H{"message": "Successfully deleted!"})
+}
+
 func (obj *CourseCrudController) RegisterRoutes(rg *gin.RouterGroup) {
 	course_routes := rg.Group("/courses")
 	course_routes.POST("/create", obj.CreateCourse)
 	course_routes.GET("/fetch", obj.FetchCourse)
+	course_routes.DELETE("/delete", obj.DeleteCourse)
 }

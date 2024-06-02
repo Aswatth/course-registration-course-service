@@ -34,3 +34,9 @@ func (obj *CourseCrudService) FetchCourse(course_id int) models.Course {
 
 	return course
 }
+
+func (obj *CourseCrudService) DeleteCourse(course_id int) {
+	var course models.Course
+
+	obj.sqlDatabase.db.Delete(&course, course_id)
+}
