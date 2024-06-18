@@ -36,7 +36,7 @@ func (obj *CourseCrudService) FetchCourse(course_id int) models.Course {
 }
 
 func (obj *CourseCrudService) UpdateCourse(course models.Course) {
-	obj.sqlDatabase.db.Save(&course)
+	obj.sqlDatabase.db.Model(&models.Course{}).Where("course_id = ?", course.Course_id).Updates(course)
 }
 
 func (obj *CourseCrudService) DeleteCourse(course_id int) {
