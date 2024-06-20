@@ -4,7 +4,6 @@ import (
 	"course-registration-system/course-service/models"
 	"course-registration-system/course-service/services"
 
-	// "fmt"
 	"net/http"
 	"strconv"
 
@@ -24,57 +23,84 @@ func (obj *CourseCrudController) CreateCourse(context *gin.Context) {
 
 	//Check if given JSON is valid
 	if err := context.ShouldBindJSON(&course); err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		context.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"response": err.Error()})
+	} else {
+		//Store to DB
+		err := obj.course_crud_service.CreateCourse(course)
+
+		if err != nil {
+			context.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"response": err.Error()})
+		} else {
+			context.Status(http.StatusOK)
+		}
 	}
 
-	//Store to DB
-	obj.course_crud_service.CreateCourse(course)
-
-	context.JSON(http.StatusOK, gin.H{"message": "Successfully created a course"})
 }
 
 func (obj *CourseCrudController) FetchCourse(context *gin.Context) {
-	course_id, _ := strconv.ParseInt(context.Query("course_id"), 0, 0)
+	course_id, err := strconv.ParseInt(context.Param("course_id"), 0, 0)
 
-	//Fetch from DB
-	fetched_course := obj.course_crud_service.FetchCourse(int(course_id))
+	if err != nil {
+		context.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"response": err.Error()})
+	} else {
+		//Fetch from DB
+		fetched_course, err := obj.course_crud_service.FetchCourse(int(course_id))
 
-	context.JSON(http.StatusOK, fetched_course)
+		if err != nil {
+			context.AbortWithStatusJSON(http.StatusNotFound, gin.H{"response": err.Error()})
+		} else {
+			context.JSON(http.StatusOK, fetched_course)
+		}
+	}
 }
 
 func (obj *CourseCrudController) UpdateCourse(context *gin.Context) {
 
 	//Fetch course
-	course_id, _ := strconv.ParseInt(context.Query("course_id"), 0, 0)
-	fetched_course := obj.course_crud_service.FetchCourse(int(course_id))
+	course_id, err := strconv.ParseInt(context.Param("course_id"), 0, 0)
 
-	var course models.Course
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+	} else {
+		var course models.Course
 
-	//Check if given JSON is valid
-	if err := context.ShouldBindJSON(&course); err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		//Check if given JSON is valid
+		if err := context.ShouldBindJSON(&course); err != nil {
+			context.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		} else {
+			course.Course_id = int(course_id)
+
+			err := obj.course_crud_service.UpdateCourse(course)
+
+			if err != nil {
+				context.AbortWithStatusJSON(http.StatusNotFound, gin.H{"response": err.Error()})
+			} else {
+				context.Status(http.StatusOK)
+			}
+		}
 	}
-
-	course.Course_id = fetched_course.Course_id
-
-	obj.course_crud_service.UpdateCourse(course)
-
-	context.JSON(http.StatusOK, gin.H{"message": "Successfully updated!"})
 }
 
 func (obj *CourseCrudController) DeleteCourse(context *gin.Context) {
-	course_id, _ := strconv.ParseInt(context.Query("course_id"), 0, 0)
+	course_id, err := strconv.ParseInt(context.Param("course_id"), 0, 0)
 
-	//Fetch from DB
-	obj.course_crud_service.DeleteCourse(int(course_id))
+	if err != nil {
+		context.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"response": err.Error()})
+	} else {
+		err := obj.course_crud_service.DeleteCourse(int(course_id))
 
-	context.JSON(http.StatusOK, gin.H{"message": "Successfully deleted!"})
+		if err != nil {
+			context.AbortWithStatusJSON(http.StatusNotFound, gin.H{"response": err.Error()})
+		} else {
+			context.Status(http.StatusOK)
+		}
+	}
 }
 
 func (obj *CourseCrudController) RegisterRoutes(rg *gin.RouterGroup) {
 	course_routes := rg.Group("/courses")
-	course_routes.POST("/create", obj.CreateCourse)
-	course_routes.GET("/fetch", obj.FetchCourse)
-	course_routes.PUT("/update", obj.UpdateCourse)
-	course_routes.DELETE("/delete", obj.DeleteCourse)
+	course_routes.POST("", obj.CreateCourse)
+	course_routes.GET("/:course_id", obj.FetchCourse)
+	course_routes.PUT("/:course_id", obj.UpdateCourse)
+	course_routes.DELETE("/:course_id", obj.DeleteCourse)
 }

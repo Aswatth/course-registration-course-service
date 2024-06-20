@@ -1,11 +1,11 @@
 package models
 
 type Course struct {
-	Course_id          int `gorm:"primaryKey"`
-	Course_name        string
-	Credits            int
-	Course_description string
-	Department         string
+	Course_id          int    `json:"course_id" gorm:"primaryKey"`
+	Course_name        string `json:"course_name"`
+	Credits            int    `json:"credits"`
+	Course_description string `json:"course_descrption"`
+	Department         string `json:"department"`
 }
 
 func (obj *Course) CreateCourse(course_id int, course_name string, credits int, course_description string, department string) {
