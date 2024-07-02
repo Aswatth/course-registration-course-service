@@ -4,7 +4,7 @@ type Course struct {
 	Course_id          int    `json:"course_id" gorm:"primaryKey"`
 	Course_name        string `json:"course_name"`
 	Credits            int    `json:"credits"`
-	Course_description string `json:"course_descrption"`
+	Course_description string `json:"course_description"`
 	Department         string `json:"department"`
 }
 

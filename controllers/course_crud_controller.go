@@ -37,20 +37,36 @@ func (obj *CourseCrudController) CreateCourse(context *gin.Context) {
 
 }
 
-func (obj *CourseCrudController) FetchCourse(context *gin.Context) {
+func (obj *CourseCrudController) GetCourse(context *gin.Context) {
 	course_id, err := strconv.ParseInt(context.Param("course_id"), 0, 0)
 
 	if err != nil {
 		context.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"response": err.Error()})
 	} else {
 		//Fetch from DB
-		fetched_course, err := obj.course_crud_service.FetchCourse(int(course_id))
+		fetched_course, err := obj.course_crud_service.GetCourse(int(course_id))
 
 		if err != nil {
 			context.AbortWithStatusJSON(http.StatusNotFound, gin.H{"response": err.Error()})
 		} else {
 			context.JSON(http.StatusOK, fetched_course)
 		}
+	}
+}
+
+func (obj *CourseCrudController) GetAllCourses(context *gin.Context) {
+
+	if(context.Query("course_id") != "") {
+		obj.GetCourse(context)
+	}
+
+	//Fetch from DB
+	fetched_course_list, err := obj.course_crud_service.GetAllCourses()
+
+	if err != nil {
+		context.AbortWithStatusJSON(http.StatusNotFound, gin.H{"response": err.Error()})
+	} else {
+		context.JSON(http.StatusOK, fetched_course_list)
 	}
 }
 
@@ -100,7 +116,7 @@ func (obj *CourseCrudController) DeleteCourse(context *gin.Context) {
 func (obj *CourseCrudController) RegisterRoutes(rg *gin.RouterGroup) {
 	course_routes := rg.Group("/courses")
 	course_routes.POST("", obj.CreateCourse)
-	course_routes.GET("/:course_id", obj.FetchCourse)
+	course_routes.GET("", obj.GetAllCourses)
 	course_routes.PUT("/:course_id", obj.UpdateCourse)
 	course_routes.DELETE("/:course_id", obj.DeleteCourse)
 }

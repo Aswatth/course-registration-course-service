@@ -20,12 +20,20 @@ func (obj *CourseCrudService) CreateCourse(course models.Course) error {
 	return result.Error
 }
 
-func (obj *CourseCrudService) FetchCourse(course_id int) (models.Course, error) {
+func (obj *CourseCrudService) GetCourse(course_id int) (models.Course, error) {
 	var course models.Course
 
 	result := obj.sqlDatabase.db.First(&course, course_id)
 
 	return course, result.Error
+}
+
+func (obj *CourseCrudService) GetAllCourses() ([]models.Course, error) {
+	var course_list []models.Course
+
+	result := obj.sqlDatabase.db.Find(&course_list)
+
+	return course_list, result.Error
 }
 
 func (obj *CourseCrudService) UpdateCourse(course models.Course) error {
