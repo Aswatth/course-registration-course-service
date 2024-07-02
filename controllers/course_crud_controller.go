@@ -38,7 +38,7 @@ func (obj *CourseCrudController) CreateCourse(context *gin.Context) {
 }
 
 func (obj *CourseCrudController) GetCourse(context *gin.Context) {
-	course_id, err := strconv.ParseInt(context.Param("course_id"), 0, 0)
+	course_id, err := strconv.ParseInt(context.Query("course_id"), 0, 0)
 
 	if err != nil {
 		context.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"response": err.Error()})
@@ -58,6 +58,7 @@ func (obj *CourseCrudController) GetAllCourses(context *gin.Context) {
 
 	if(context.Query("course_id") != "") {
 		obj.GetCourse(context)
+		return
 	}
 
 	//Fetch from DB
